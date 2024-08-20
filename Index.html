@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partagez pour Gagner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        nav {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        nav button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF; /* Couleur des onglets */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .tab {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .active {
+            display: block;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 90%;
+            max-width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #25D366; /* Couleur WhatsApp */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 20px;
+            color: green;
+        }
+        #errorMessage {
+            margin-top: 20px;
+            font-size: 20px;
+            color: red;
+        }
+        @media (max-width: 600px) {
+            nav button {
+                width: 100%;
+                margin: 5px 0;
+            }
+            input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button id="signupTabButton">Créer un Compte</button>
+        <button id="shareTabButton">Partager</button>
+        <button id="balanceTabButton">Mon Solde</button>
+        <button id="withdrawTabButton">Retirer de l'Argent</button>
+    </nav>
+
+    <div id="signupSection" class="tab active">
+        <h1>Créer un Compte</h1>
+        <input type="text" id="username" placeholder="Entrez votre nom d'utilisateur" required>
+        <button id="signupButton">Créer un Compte</button>
+        <div id="signupMessage"></div>
+    </div>
+
+    <div id="shareSection" class="tab">
+        <h1>Partagez pour Gagner 500 FCFA</h1>
+        <p>Partagez ce lien avec vos amis :</p>
+        <p><strong>https://chat.whatsapp.com/Fq0LwX9Oxpb5V5qKWabCYc</strong></p>
+        <button id="shareButton">Partager sur WhatsApp</button>
+        <div id="message"></div>
+    </div>
+
+    <div id="balanceSection" class="tab">
+        <h1>Mon Solde</h1>
+        <p>Votre solde actuel est : <strong id="balance">0 FCFA</strong></p>
+    </div>
+
+    <div id="withdrawSection" class="tab">
+        <h1>Retirer de l'Argent</h1>
+        <button id="withdrawButton">Retirer 5000 FCFA</button>
+        <div id="withdrawMessage"></div>
+        <div id="errorMessage"></div>
+    </div>
+
+    <script>
+        // Vérifier si l'utilisateur est déjà connecté
+        if (localStorage.getItem('username')) {
+            showShareSection();
+        }
+
+        document.getElementById('signupButton').onclick = function() {
+            const username = document.getElementById('username').value;
+            if (username) {
+                localStorage.setItem('username', username);
+                localStorage.setItem('balance', 0); // Initialiser le solde
+                showShareSection();
+            } else {
+                document.getElementById('signupMessage').innerText = "Veuillez entrer un nom d'utilisateur.";
+            }
+        }
+
+        function showShareSection() {
+            document.getElementById('signupSection').style.display = 'none';
+            document.getElementById('shareSection').style.display = 'block';
+            updateBalanceDisplay();
+        }
+
+        document.getElementById('shareButton').onclick = function() {
+            const link = "https://chat.whatsapp.com/Fq0LwX9Oxpb5V5qKWabCYc";
+            const text = "Rejoignez ce groupe et gagnez de l'argent ! " + link;
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+
+            window.open(whatsappUrl, '_blank');
+
+            // Mettre à jour le solde
+            let currentBalance = parseInt(localStorage.getItem('balance'));
+            currentBalance += 500; // Ajouter 500 FCFA
+            localStorage.setItem('balance', currentBalance);
+            updateBalanceDisplay();
+
+            // Afficher un message de succès
+            document.getElementById('message').innerText = "Vous venez de gagner 500 FCFA !";
+        }
+
+        function updateBalanceDisplay() {
+            const balance = localStorage.getItem('balance');
+            document.getElementById('balance').innerText = balance + " FCFA";
+        }
+
+        // Gestion des onglets
+        document.getElementById('signupTabButton').onclick = function() {
+            showTab('signupSection');
+        }
+        
+        document.getElementById('shareTabButton').onclick = function() {
+            showTab('shareSection');
+        }
+        
+        document.getElementById('balanceTabButton').onclick = function() {
+            showTab('balanceSection');
+            updateBalanceDisplay();
+        }
+
+        document.getElementById('withdrawTabButton').onclick = function() {
+            showTab('withdrawSection');
+        }
+
+        document.getElementById('withdrawButton').onclick = function() {
+            let currentBalance = parseInt(localStorage.getItem('balance'));
+            if (currentBalance >= 5000) {
+                currentBalance -= 5000; // Retirer 5000 FCFA
+                localStorage.setItem('balance', currentBalance);
+                updateBalanceDisplay();
+                document.getElementById('withdrawMessage').innerText = "Vous avez retiré 5000 FCFA avec succès.";
+                document.getElementById('errorMessage').innerText = ""; // Réinitialiser le message d'erreur
+            } else {
+                document.getElementById('errorMessage').innerText = "Impossible de retirer des fonds inférieurs à 5000 FCFA.";
+                document.getElementById('withdrawMessage').innerText = ""; // Réinitialiser le message de succès
+            }
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.getElementById(tabId).style.display = 'block';
+        }
+    </script>
+
+</body>
+  </html>
